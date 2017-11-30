@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>Notre todolist</title>
+        <style>
+            a {text-decoration: none; color: black;}
+        </style>
+    </head>
+
+    <body>
+        <h1>Notre todolist</h1>
+
+        <ul id="taches">
+        </ul>
+
+        <form action="/todo/ajouter/" method="post" id="formulaire_todolist">
+            <p>
+                <label for="newtodo">Que devez-vous faire ?</label>
+                <input type="text" name="newtodo" id="newtodo" autofocus />
+                <input type="submit" />
+            </p>
+        </form>
+
+        <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+            var socket = io.connect('http://localhost:8080');
+
+            // On reçoit une demande de mise à jour de toute la todolist
+            socket.on('miseajour', function(nouvelleTodolist) {
+                $('#taches').empty();
+                nouvelleTodolist.forEach(function(todo, index) {
+                    $('#taches').prepend('<li><a href="#" data-index="' + index + '" class="supprimer">✘</a> ' + todo + '</li>');
+                });
+            });
+
+            // On veut supprimer une tâche
+            $('body').on('click', '.supprimer', function() {
+                socket.emit('supprimer', $(this).data('index'));
+            });
+
+            // On veut ajouter une tâche
+            $('#formulaire_todolist').submit(function() {
+                var nomTodo = $('#newtodo').val();
+                socket.emit('ajouter', nomTodo);
+                $('#newtodo').val('').focus();
+                return false;
+            });
+        </script>
+    </body>
+</html>
